@@ -9,6 +9,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import random
+import pandas as pd
+
 
 
 IMAGE_SIZE = 32
@@ -22,10 +25,11 @@ def load_images2():
     """
     labels = []
     image_index = 0
-    dataset = np.ndarray(shape=(717, IMAGE_SIZE, IMAGE_SIZE, 3),
+    # 714 because the Flying Pokemon were removed
+    dataset = np.ndarray(shape=(714, IMAGE_SIZE, IMAGE_SIZE, 3),
                             dtype=np.float32)
-    for type in os.listdir('./Images/Resized'):
-        type_images = os.listdir('./Images/Resized/' + type + '/')
+    for type in os.listdir('./Images/data'):
+        type_images = os.listdir('./Images/data/' + type + '/')
         for image in type_images:
             image_file = os.path.join(os.getcwd(), 'Images/Resized', type, image)
             # reading the images as they are; no normalization, no color editing
@@ -114,6 +118,48 @@ def main():
     print (le.classes_)
     transformed_labels = le.transform(labels)
     print (transformed_labels)
+    df = pd.DataFrame(np.random.randn(714, 2))
+    msk = np.random.rand(len(df)) < 0.8
+    print (msk)
+    true_indexes = []
+    false_indexes = []
+    training_labels = []
+    test_labels = []
+    for idx, val in enumerate(msk):
+        if val == 1:
+            true_indexes.append(idx)
+            training_labels.append(transformed_labels[idx])
+        else:
+            false_indexes.append(idx)
+            test_labels.append(transformed_labels[idx])
+
+    print(len(true_indexes))
+    training_set = np.delete(images, false_indexes, 0)
+    print(training_set.shape)
+    print(len(false_indexes))
+    test_set = np.delete(images, true_indexes, 0)
+    print(test_set.shape)
+
+    plt.imshow(training_set[1])
+    plt.show()
+    print(training_labels[1])
+    plt.imshow(test_set[100])
+    plt.show()
+    print(test_labels[100])
+
+
+
+    """
+    sample_indexes = random.sample(range(714),238)
+    test_set = [images[i] for i in sample_indexes]
+    test_labels = [transformed_labels[i] for i in sample_indexes]
+    training_set = images
+    training_labels = transformed_labels
+    print (type(training_set))
+    for i in sample_indexes:
+        del training_set[i]
+        del training_labels[i]
+        """
 
     #print type(images)
     #print images.shape
@@ -124,15 +170,17 @@ def main():
     #dataset = np.ndarray((717, IMAGE_SIZE, IMAGE_SIZE), dtype=np.float32)
     #dataset = images.reshape((717, IMAGE_SIZE * IMAGE_SIZE))
     #first_image_per_type(images)
-    reshaped_dataset = images.reshape(717, 3072)
+    reshaped_dataset = training_set.reshape(len(training_labels), 3072)
+    reshaped_testset = test_set.reshape(len(test_labels), 3072)
     print (reshaped_dataset.shape)
     # Training and predicting.
     classifier = learn.TensorFlowEstimator(
-        model_fn=conv_model, n_classes=18, batch_size=100, steps=2000,
+        model_fn=conv_model, n_classes=17, batch_size=100, steps=2000,
         learning_rate=0.001)
-    classifier.fit(reshaped_dataset, transformed_labels)
-    #score = metrics.accuracy_score(
-     #   mnist.test.labels, classifier.predict(mnist.test.images))
+    classifier.fit(reshaped_dataset, training_labels)
+    score = metrics.accuracy_score(
+        test_labels, classifier.predict(reshaped_testset))
+    classifier.save(os.getcwd() + '/model')
     #print('Accuracy: {0:f}'.format(score))
     #print reshaped_dataset[0, 50:70]
     #print reshaped_dataset.shape
