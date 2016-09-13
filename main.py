@@ -2,12 +2,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from scipy import ndimage
+from sklearn import metrics, preprocessing
+from tensorflow.contrib import learn
+
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn import metrics
 import tensorflow as tf
-from tensorflow.contrib import learn
+
 
 IMAGE_SIZE = 32
 
@@ -84,7 +86,7 @@ def conv_model(X, y):
   # pylint: disable=invalid-name,missing-docstring
   # reshape X to 4d tensor with 2nd and 3rd dimensions being image width and
   # height final dimension being the number of color channels.
-  #X = tf.reshape(X, [-1, 28, 28, 1])
+  X = tf.reshape(X, [-1, IMAGE_SIZE, IMAGE_SIZE, 3])
   # first conv layer will compute 32 features for each 5x5 patch
   with tf.variable_scope('conv_layer1'):
     h_conv1 = learn.ops.conv2d(X, n_filters=32, filter_shape=[5, 5],
@@ -95,8 +97,9 @@ def conv_model(X, y):
     h_conv2 = learn.ops.conv2d(h_pool1, n_filters=64, filter_shape=[5, 5],
                                bias=True, activation=tf.nn.relu)
     h_pool2 = max_pool_2x2(h_conv2)
+
     # reshape tensor into a batch of vectors
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 8 * 8 * 64])
   # densely connected layer with 1024 neurons.
   h_fc1 = learn.ops.dnn(
       h_pool2_flat, [1024], activation=tf.nn.relu, dropout=0.5)
@@ -105,6 +108,12 @@ def conv_model(X, y):
 
 def main():
     images, labels = load_images2()
+    print (labels)
+    le = preprocessing.LabelEncoder()
+    le.fit(labels)
+    print (le.classes_)
+    transformed_labels = le.transform(labels)
+    print (transformed_labels)
 
     #print type(images)
     #print images.shape
@@ -116,11 +125,12 @@ def main():
     #dataset = images.reshape((717, IMAGE_SIZE * IMAGE_SIZE))
     #first_image_per_type(images)
     reshaped_dataset = images.reshape(717, 3072)
+    print (reshaped_dataset.shape)
     # Training and predicting.
     classifier = learn.TensorFlowEstimator(
         model_fn=conv_model, n_classes=18, batch_size=100, steps=2000,
         learning_rate=0.001)
-    classifier.fit(reshaped_dataset, labels)
+    classifier.fit(reshaped_dataset, transformed_labels)
     #score = metrics.accuracy_score(
      #   mnist.test.labels, classifier.predict(mnist.test.images))
     #print('Accuracy: {0:f}'.format(score))
