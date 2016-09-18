@@ -79,7 +79,8 @@ def first_image_per_type(dataset):
         plt.imshow(pokemon)
         plt.show()
 
-        ### Convolutional network
+
+### Convolutional network
 
 def max_pool_2x2(tensor_in):
   return tf.nn.max_pool(
@@ -113,11 +114,15 @@ def conv_model(X, y):
 def main():
     images, labels = load_images2()
     print (labels)
+
+    # Label encoder
     le = preprocessing.LabelEncoder()
     le.fit(labels)
     print (le.classes_)
     transformed_labels = le.transform(labels)
     print (transformed_labels)
+
+
     df = pd.DataFrame(np.random.randn(714, 2))
     msk = np.random.rand(len(df)) < 0.8
     print (msk)
@@ -175,13 +180,24 @@ def main():
     print (reshaped_dataset.shape)
     # Training and predicting.
     classifier = learn.TensorFlowEstimator(
-        model_fn=conv_model, n_classes=17, batch_size=100, steps=2000,
+        model_fn=conv_model, n_classes=17, batch_size=100, steps=20000,
         learning_rate=0.001)
-    classifier.fit(reshaped_dataset, training_labels)
+    classifier.fit(reshaped_dataset, training_labels, logdir=os.getcwd() + 'model_20000a_logs')
+    classifier.save(os.getcwd() + '/model_20000a')
     score = metrics.accuracy_score(
         test_labels, classifier.predict(reshaped_testset))
-    classifier.save(os.getcwd() + '/model')
-    #print('Accuracy: {0:f}'.format(score))
+    print('Accuracy: {0:f}'.format(score))
+
+    prediction_labels = classifier.predict(reshaped_testset)
+    target_names=['Bug' 'Dark' 'Dragon' 'Electric' 'Fairy' 'Fighting' 'Fire' 'Ghost' 'Grass'
+        'Ground' 'Ice' 'Normal' 'Poison' 'Psychic' 'Rock' 'Steel' 'Water']
+
+    print (metrics.classification_report(test_labels, prediction_labels))
+    
+
+    f1 = metrics.f1_score(
+        test_labels, classifier.predict(reshaped_testset))
+    
     #print reshaped_dataset[0, 50:70]
     #print reshaped_dataset.shape
 
