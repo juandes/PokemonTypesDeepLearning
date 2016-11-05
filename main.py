@@ -40,12 +40,9 @@ def load_images():
             image_data = (ndimage.imread(image_file, mode='RGB'))
             if image_data.shape != (IMAGE_SIZE, IMAGE_SIZE, 3):
                 raise Exception('Unexpected image shape: %s %s' % (str(image_data.shape), image_file))
-            #plt.imshow(image_data)
-            #plt.show()
             dataset[image_index, :, :] = image_data
             image_index += 1
             labels.append(type)
-            #dataset_names.append(dataset.astype(int))
         
     return (dataset, labels, pokemon_name)
 
@@ -76,7 +73,7 @@ def conv_model(X, y):
     # Print the shape of the tensor
     print ("Convolution layer 1 shape: {}".format(h_conv1.get_shape()))
     h_pool1 = max_pool_2x2(h_conv1)
-    print ("Convolution layer 1 shape (after pooling): {}".format(h_conv1.get_shape()))
+    print ("Convolution layer 1 shape (after pooling): {}".format(h_pool1.get_shape()))
 
   # second conv layer will compute 64 features for each 5x5 patch.
   with tf.variable_scope('conv_layer2'):
@@ -138,29 +135,6 @@ def main():
     print(test_labels[100])
     print(pokemon_test[100])
 
-
-
-    """
-    sample_indexes = random.sample(range(714),238)
-    test_set = [images[i] for i in sample_indexes]
-    test_labels = [transformed_labels[i] for i in sample_indexes]
-    training_set = images
-    training_labels = transformed_labels
-    print (type(training_set))
-    for i in sample_indexes:
-        del training_set[i]
-        del training_labels[i]
-        """
-
-    #print type(images)
-    #print images.shape
-    #print labels
-    #print images[0,0, :]
-    #print images.shape()
-    # The 717 is because there are 717 images. Trust me.
-    #dataset = np.ndarray((717, IMAGE_SIZE, IMAGE_SIZE), dtype=np.float32)
-    #dataset = images.reshape((717, IMAGE_SIZE * IMAGE_SIZE))
-    #first_image_per_type(images)
     reshaped_dataset = training_set.reshape(len(training_labels), 3072)
     reshaped_testset = test_set.reshape(len(test_labels), 3072)
     print (reshaped_dataset.shape)
@@ -182,15 +156,6 @@ def main():
     print (test_labels)
     print (prediction_labels)
     print (pokemon_test)
-
-    
-
-    f1 = metrics.f1_score(
-        test_labels, classifier.predict(reshaped_testset))
-    
-    #print reshaped_dataset[0, 50:70]
-    #print reshaped_dataset.shape
-
 
 
 if __name__ == "__main__":
