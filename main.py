@@ -120,24 +120,13 @@ def main():
             test_labels.append(transformed_labels[idx])
             pokemon_test.append(pokemon[idx])
 
-    print(len(true_indexes))
     training_set = np.delete(images, false_indexes, 0)
-    print(training_set.shape)
-    print(len(false_indexes))
     test_set = np.delete(images, true_indexes, 0)
-    print(test_set.shape)
 
-    plt.imshow(training_set[1])
-    plt.show()
-    print(training_labels[1])
-    plt.imshow(test_set[100])
-    plt.show()
-    print(test_labels[100])
-    print(pokemon_test[100])
 
     reshaped_dataset = training_set.reshape(len(training_labels), 3072)
     reshaped_testset = test_set.reshape(len(test_labels), 3072)
-    print (reshaped_dataset.shape)
+
     # Training and predicting.
     classifier = learn.TensorFlowEstimator(
         model_fn=conv_model, n_classes=17, batch_size=100, steps=20000,
